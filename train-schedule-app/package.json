@@ -1,1 +1,71 @@
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+import { Container, Typography } from '@material-ui/core';
 
+const TrainsScheduleApp = () => {
+  const [trains, setTrains] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.get('http://20.244.56.144/train/trains', {
+          headers: {
+            Authorization: 'eyJhbGci0iJIUzI1NiIsInR5cC161kpXVCJ9.eyJleHAiOjE20DI2MjkyNJQs ImNvbXBhbn10YW1lIjoiVHJhaW4gQ2Vud HJhbCIsImNsaWVudE1EIjo1YjQ2MTE4ZjAtZmJkZseeYjE2LWEBYjEtNmF1NmFkNzEBYj13Ine.v930cxrZHWDTnTwm8-6t toTGI4C65Grhn3rIJDCBfy8', 
+          },
+        });
+
+        const filteredTrains = response.data.filter(
+          (train) => train.departureTime.Minutes >= 30
+        );
+        
+        const sortedTrains = filteredTrains.sort((a, b) => {
+          if (a.price.sleeper === b.price.sleeper) {
+            if (a.price.AC === b.price.AC) {
+              return b.seatsAvailable.sleeper - a.seatsAvailable.sleeper;
+            }
+            return a.price.AC - b.price.AC;
+          }
+          return a.price.sleeper - b.price.sleeper;
+        });
+
+        setTrains(sortedTrains);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  return (
+    <Container>
+      <Typography variant="h4">Trains Schedule</Typography>
+      <ul>
+        {trains.map((train) => (
+          <li key={train.trainNumber}>
+            <Typography variant="body1">
+              Train Name: {train.trainName}
+            </Typography>
+            <Typography variant="body2">
+              Departure Time: {train.departureTime.Hours}:
+              {train.departureTime.Minutes}:
+              {train.departureTime.Seconds}
+            </Typography>
+            <Typography variant="body2">
+              Sleeper Seats Available: {train.seatsAvailable.sleeper}
+            </Typography>
+            <Typography variant="body2">
+              AC Seats Available: {train.seatsAvailable.AC}
+            </Typography>
+            <Typography variant="body2">
+              Sleeper Price: {train.price.sleeper}
+            </Typography>
+            <Typography variant="body2">AC Price: {train.price.AC}</Typography>
+          </li>
+        ))}
+      </ul>
+    </Container>
+  );
+};
+
+export default TrainsScheduleApp;
